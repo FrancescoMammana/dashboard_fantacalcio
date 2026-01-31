@@ -291,9 +291,23 @@ def main():
             
             summary_df = pd.DataFrame(summary_data)
             
+            # Aggiungi riga di totali
+            totals_row = pd.DataFrame([{
+                'Squadra': '**TOTALI**',
+                'Crediti Residui': summary_df['Crediti Residui'].sum(),
+                'Da Svincolare': summary_df['Da Svincolare'].sum(),
+                'P': summary_df['P'].sum(),
+                'D': summary_df['D'].sum(),
+                'C': summary_df['C'].sum(),
+                'A': summary_df['A'].sum(),
+                'Costo Totale': summary_df['Costo Totale'].sum()
+            }])
+            
+            summary_df_with_totals = pd.concat([summary_df, totals_row], ignore_index=True)
+            
             # Mostra la tabella riassuntiva
             st.dataframe(
-                summary_df,
+                summary_df_with_totals,
                 use_container_width=True,
                 hide_index=True,
                 column_config={
