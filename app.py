@@ -268,7 +268,8 @@ def main():
                 # Calcola statistiche
                 crediti_totali = calculate_crediti_residui(team_state, team_crediti_base)
                 svincolati_count = team_state['Svincolare'].sum()
-                costo_totale = team_state['Importo_Pagato'].sum()
+                # costo_totale = team_state['Importo_Pagato'].sum()
+                costo_totale = team_state.loc[team_state['Svincolare'] == 1, 'Importo_Pagato'].sum()
                 
                 # Conta svincolati per ruolo
                 svincolati_per_ruolo = team_state[team_state['Svincolare'] == True].groupby('Ruolo').size()
