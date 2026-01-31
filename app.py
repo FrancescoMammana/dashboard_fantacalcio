@@ -143,15 +143,18 @@ def main():
         team_df = team_info['data'].copy()
         crediti_base = team_info['crediti_base']
         
-        # Inizializza session state per le modifiche
-        if 'team_data' not in st.session_state or st.session_state.get('current_team') != selected_team:
-            st.session_state.team_data = team_df.copy()
-            st.session_state.current_team = selected_team
-            # Inizializza colonne editabili
-            st.session_state.team_data['Svincolare'] = st.session_state.team_data['Ha_Asterisco']
-            st.session_state.team_data['Importo_Pagato'] = 1
+        # Inizializza session state per TUTTE le squadre se non esiste
+        if 'all_teams_state' not in st.session_state:
+            st.session_state.all_teams_state = {}
+            # Inizializza tutti i team
+            for team_name, team_data in all_teams_data.items():
+                team_df_init = team_data['data'].copy()
+                team_df_init['Svincolare'] = team_df_init['Ha_Asterisco']
+                team_df_init['Importo_Pagato'] = 1
+                st.session_state.all_teams_state[team_name] = team_df_init
         
-        team_df = st.session_state.team_data
+        # Usa i dati salvati per la squadra corrente
+        team_df = st.session_state.all_teams_state[selected_team]
         
         # Calcola crediti residui totali
         crediti_residui_totali = calculate_crediti_residui(team_df, crediti_base)
@@ -212,10 +215,10 @@ def main():
                         svincolare = cols[4].checkbox(
                             "Sì",
                             value=row['Svincolare'],
-                            key=f"svinc_{idx}",
+                            key=f"svinc_{selected_team}_{idx}",
                             label_visibility="collapsed"
                         )
-                        st.session_state.team_data.loc[idx, 'Svincolare'] = svincolare
+                        st.session_state.all_teams_state[selected_team].loc[idx, 'Svincolare'] = svincolare
                         
                         # Input per importo pagato
                         importo = cols[5].number_input(
@@ -223,10 +226,10 @@ def main():
                             min_value=1,
                             value=int(row['Importo_Pagato']),
                             step=1,
-                            key=f"imp_{idx}",
+                            key=f"imp_{selected_team}_{idx}",
                             label_visibility="collapsed"
                         )
-                        st.session_state.team_data.loc[idx, 'Importo_Pagato'] = importo
+                        st.session_state.all_teams_state[selected_team].loc[idx, 'Importo_Pagato'] = importo
                     
                     st.markdown("---")
             
@@ -251,7 +254,83 @@ def main():
                 st.metric("Bonus Totale da *", bonus_totale)
         
         with tab2:
-            st.header("🔄 Giocatori Svincolati")
+            st.header("🔄 Riepilogo Globale Lega")
+            
+            # Sezione 1: Riepilogo di tutte le squadre
+            st.subheader("📊 Riepilogo Tutte le Squadre")
+            
+            # Crea una tabella riassuntiva
+            summary_data = []
+            for team_name in team_names:
+                team_state = st.session_state.all_teams_state[team_name]
+                team_crediti_base = all_teams_data[team_name]['crediti_base']
+                
+                # Calcola statistiche
+                crediti_totali = calculate_crediti_residui(team_state, team_crediti_base)
+                svincolati_count = team_state['Svincolare'].sum()
+                costo_totale = team_state['Importo_Pagato'].sum()
+                
+                # Conta svincolati per ruolo
+                svincolati_per_ruolo = team_state[team_state['Svincolare'] == True].groupby('Ruolo').size()
+                p_count = svincolati_per_ruolo.get('P', 0)
+                d_count = svincolati_per_ruolo.get('D', 0)
+                c_count = svincolati_per_ruolo.get('C', 0)
+                a_count = svincolati_per_ruolo.get('A', 0)
+                
+                summary_data.append({
+                    'Squadra': team_name,
+                    'Crediti Residui': crediti_totali,
+                    'Da Svincolare': svincolati_count,
+                    'P': p_count,
+                    'D': d_count,
+                    'C': c_count,
+                    'A': a_count,
+                    'Costo Totale': costo_totale
+                })
+            
+            summary_df = pd.DataFrame(summary_data)
+            
+            # Mostra la tabella riassuntiva
+            st.dataframe(
+                summary_df,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Squadra": st.column_config.TextColumn("Squadra", width="large"),
+                    "Crediti Residui": st.column_config.NumberColumn("💰 Crediti", width="small"),
+                    "Da Svincolare": st.column_config.NumberColumn("🔄 Tot. Svinc.", width="small"),
+                    "P": st.column_config.NumberColumn("P", width="small"),
+                    "D": st.column_config.NumberColumn("D", width="small"),
+                    "C": st.column_config.NumberColumn("C", width="small"),
+                    "A": st.column_config.NumberColumn("A", width="small"),
+                    "Costo Totale": st.column_config.NumberColumn("💵 Costo", width="small")
+                }
+            )
+            
+            st.markdown("---")
+            
+            # Sezione 2: Dettaglio giocatori da svincolare per ogni squadra
+            st.subheader("📋 Giocatori da Svincolare per Squadra")
+            
+            for team_name in team_names:
+                team_state = st.session_state.all_teams_state[team_name]
+                svincolati_team = team_state[team_state['Svincolare'] == True]
+                
+                if len(svincolati_team) > 0:
+                    with st.expander(f"**{team_name}** - {len(svincolati_team)} giocatori da svincolare"):
+                        # Raggruppa per ruolo
+                        for ruolo in ['P', 'D', 'C', 'A']:
+                            ruolo_svinc = svincolati_team[svincolati_team['Ruolo'] == ruolo]
+                            if len(ruolo_svinc) > 0:
+                                st.markdown(f"**{ruolo}:**")
+                                display_cols = ruolo_svinc[['Calciatore', 'Squadra', 'Costo', 'Importo_Pagato', 'Ha_Asterisco']].copy()
+                                display_cols.columns = ['Calciatore', 'Sq.', 'Costo', 'Importo Pagato', 'Ha *']
+                                st.dataframe(display_cols, use_container_width=True, hide_index=True)
+            
+            st.markdown("---")
+            
+            # Sezione 3: Giocatori Svincolati disponibili (dal foglio Excel)
+            st.subheader("🌟 Giocatori Svincolati Disponibili")
             
             # Filtro per ruolo
             col1, col2 = st.columns([1, 3])
@@ -270,13 +349,13 @@ def main():
             df_display = df_display.sort_values('FVM', ascending=False)
             
             # Mostra statistiche
-            st.markdown(f"**Totale giocatori svincolati:** {len(df_display)}")
+            st.markdown(f"**Totale giocatori svincolati disponibili:** {len(df_display)}")
             
             # Mostra la tabella
             st.dataframe(
                 df_display,
                 use_container_width=True,
-                height=600,
+                height=400,
                 column_config={
                     "Nome": st.column_config.TextColumn("Nome", width="medium"),
                     "Sq.": st.column_config.TextColumn("Squadra", width="small"),
@@ -289,7 +368,7 @@ def main():
             )
             
             # Top 10 per FVM
-            st.subheader("🌟 Top 10 per FVM")
+            st.subheader("🏆 Top 10 Svincolati per FVM")
             top10 = df_svincolati.nlargest(10, 'FVM')[['Nome', 'Sq.', 'Ruolo', 'FVM']]
             st.dataframe(top10, use_container_width=True, hide_index=True)
     

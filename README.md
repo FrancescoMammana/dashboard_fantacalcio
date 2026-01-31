@@ -19,10 +19,14 @@ Dashboard interattiva Streamlit per la gestione delle rose del fantacalcio con c
 - **Conta Svincolati per Ruolo** - P/D/C/A separati
 
 ### 4. Tab Svincolati
-- **Filtro per ruolo** - Dropdown per selezionare P/D/C/A o visualizzare tutti
-- **Ordinamento FVM** - Decrescente (migliori giocatori in cima)
-- **Dati dal foglio Svincolati** - Nome, Squadra, Ruolo, PGv, MV, FM, FVM
-- **Top 10 FVM** - Tabella riepilogativa dei migliori svincolati
+- **Riepilogo Globale Lega** - Tabella con tutte le squadre e statistiche
+  - Crediti residui per squadra
+  - Numero totale giocatori da svincolare
+  - Conteggio svincolati per ruolo (P/D/C/A)
+  - Costo totale rosa
+- **Dettaglio Svincolati per Squadra** - Expander con lista giocatori da svincolare per ogni squadra
+- **Giocatori Svincolati Disponibili** - Filtro per ruolo e ordinamento FVM decrescente
+- **Top 10 FVM** - Tabella riepilogativa dei migliori svincolati disponibili
 
 ### 5. Tema Scuro Professionale
 - Design moderno con tema scuro
@@ -33,7 +37,7 @@ Dashboard interattiva Streamlit per la gestione delle rose del fantacalcio con c
 
 ### Prerequisiti
 - Python 3.8+
-- File Excel: `Rose_wins-for-life_updated.xlsx`
+- File Excel: `rose.xlsx` (nella stessa directory dello script)
 
 ### Installazione Dipendenze
 
@@ -99,9 +103,10 @@ Il tema scuro può essere personalizzato modificando il CSS nella sezione `st.ma
 ## 🐛 Risoluzione Problemi
 
 ### Errore: File non trovato
-Assicurati che il file `Rose_wins-for-life_updated.xlsx` sia nel percorso:
+Assicurati che il file `rose.xlsx` sia nella stessa directory dello script:
 ```
-/mnt/user-data/uploads/Rose_wins-for-life_updated.xlsx
+rose.xlsx
+dashboard_fantacalcio.py
 ```
 
 ### Porta 8501 già in uso
@@ -112,9 +117,11 @@ streamlit run dashboard_fantacalcio.py --server.port 8502
 
 ## 📝 Note
 
-- I dati vengono caricati in cache per prestazioni ottimali
+- I dati vengono salvati in memoria durante la sessione per tutte le squadre
+- Le modifiche persistono quando si cambia squadra nella stessa sessione
 - Le modifiche sono temporanee (non salvate nel file Excel)
 - La dashboard supporta tutte le 10 squadre del campionato
+- Il tab "Svincolati" mostra un riepilogo globale di tutta la lega
 
 ## 🏆 Squadre Supportate
 
