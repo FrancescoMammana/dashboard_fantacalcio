@@ -308,16 +308,17 @@ def main():
             # Mostra la tabella riassuntiva
             st.dataframe(
                 summary_df_with_totals,
+                use_container_width=True,
                 hide_index=True,
                 column_config={
-                    "Squadra": st.column_config.TextColumn("Squadra", width="large"),
-                    "Crediti Residui": st.column_config.NumberColumn("💰 Crediti", width="small"),
-                    "Da Svincolare": st.column_config.NumberColumn("🔄 Tot. Svinc.", width="small"),
-                    "P": st.column_config.NumberColumn("P", width="small"),
-                    "D": st.column_config.NumberColumn("D", width="small"),
-                    "C": st.column_config.NumberColumn("C", width="small"),
-                    "A": st.column_config.NumberColumn("A", width="small"),
-                    "Costo Totale": st.column_config.NumberColumn("💵 Costo", width="small")
+                    "Squadra": st.column_config.TextColumn("Squadra"),
+                    "Crediti Residui": st.column_config.NumberColumn("💰 Crediti"),
+                    "Da Svincolare": st.column_config.NumberColumn("🔄 Tot. Svinc."),
+                    "P": st.column_config.NumberColumn("P"),
+                    "D": st.column_config.NumberColumn("D"),
+                    "C": st.column_config.NumberColumn("C"),
+                    "A": st.column_config.NumberColumn("A"),
+                    "Costo Totale": st.column_config.NumberColumn("💵 Costo")
                 }
             )
             
