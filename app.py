@@ -308,7 +308,6 @@ def main():
             # Mostra la tabella riassuntiva
             st.dataframe(
                 summary_df_with_totals,
-                use_container_width=True,
                 hide_index=True,
                 column_config={
                     "Squadra": st.column_config.TextColumn("Squadra", width="large"),
